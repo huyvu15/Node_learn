@@ -1,16 +1,24 @@
 var http = require('http');
 var fs = require('fs'); 
 var request = require('request');
+var csv = require('csv');
+var url = require('url');
 
 
 var content = undefined;   
 var content_file = undefined;
 
-request.get('https://www.bnefoodtrucks.com.au/api/1/trucks', function(err, res, body){
-    content = body;
+request.get('https://data.brisbane.qld.gov.au/api/explore/v2.1/catalog/datasets/brisbane-city-council-events/exports/csv?lang=en&timezone=Asia%2FJakarta&use_labels=true&delimiter=%2C', function(err, res, body){
+    csv.parse(body, function(err,data)
+    {
+        content = data;
+        console.log(content);
+    })
 });
 
-function convertTable(data_json) {
+
+
+function convertCSV(data_csv) {
 
     var body_start =  content_file.indexOf('<body>');
 
@@ -23,28 +31,23 @@ function convertTable(data_json) {
 
     var html = '<table>';
 
-    // Kiểm tra nếu có dữ liệu
-    if (data_json.length === 0) {
-        return html + "<p>No data available</p></body></html>";
-    }
-
     // Tạo hàng tiêu đề
     html += '<tr>\n';
-    for (var key in data_json[0]) {
-        if (typeof data_json[0][key] !== 'object') {
-            html += '<th>' + key + '</th>\n';
-        }
-    }
+    data_csv[0].forEach(function(thuoc_tinh) {
+        html += '<td>' + thuoc_tinh + '</td>\n';
+    });
     html += '</tr>\n';
 
+    data = data_csv.slice(1);
+
+
+
     // Tạo các hàng dữ liệu
-    data_json.forEach(function (object) {
+    data.forEach(function (dong) {
         html += '<tr>\n';
-        for (var thuoc_tinh in object) {
-            if (typeof object[thuoc_tinh] !== 'object') {
-                html += '<td>' + object[thuoc_tinh] + '</td>\n';
-            }
-        }
+        dong.forEach(function (cell){
+            html += '<td>' + cell + '</td>\n';
+        });
         html += '</tr>\n';
     });
 
@@ -53,10 +56,12 @@ function convertTable(data_json) {
     return string_to_body + html + string_to_end_body;
 }
 
+
+
 http.createServer(function(req, res){
     if (content && content_file) {
         res.writeHead(200, {'Content-Type': 'text/html'});
-        res.end(convertTable(JSON.parse(content)));
+        res.end(convertCSV(content));
     } else {
         res.writeHead(200, {'Content-Type': 'text/html'});
         res.end('Nothing !!!');

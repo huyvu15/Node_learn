@@ -3,6 +3,8 @@ var http = require('http');
 var dayjs = require('dayjs');
 var localizedFormat = require('dayjs/plugin/localizedFormat');
 
+var fs = require('fs'); 
+
 // Import ngôn ngữ tiếng Việt
 require('dayjs/locale/vi');
 
@@ -24,3 +26,4 @@ function serverCallback(req, res) {
 http.createServer(serverCallback).listen(8080, () => {
     console.log("Server is running at http://localhost:8080");
 });
+

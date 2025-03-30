@@ -1,16 +1,4 @@
-var http = require('http');
-var fs = require('fs'); 
-var request = require('request');
-
-
-var content = undefined;   
-var content_file = undefined;
-
-request.get('https://www.bnefoodtrucks.com.au/api/1/trucks', function(err, res, body){
-    content = body;
-});
-
-function convertTable(data_json) {
+exports.convertTable = function(data_json, content_file) {
 
     var body_start =  content_file.indexOf('<body>');
 
@@ -53,21 +41,41 @@ function convertTable(data_json) {
     return string_to_body + html + string_to_end_body;
 }
 
-http.createServer(function(req, res){
-    if (content && content_file) {
-        res.writeHead(200, {'Content-Type': 'text/html'});
-        res.end(convertTable(JSON.parse(content)));
-    } else {
-        res.writeHead(200, {'Content-Type': 'text/html'});
-        res.end('Nothing !!!');
-    }
-}).listen(8080)
+
+exports.convertCSV = function(data_csv, content_file) {
+
+    var body_start =  content_file.indexOf('<body>');
+
+    var body_end = content_file.indexOf('</body>');
 
 
-fs.readFile('./index.html', function(err, data) {
-    if (err) {
-        throw err;
-    } else {
-        content_file = data.toString();
-    }
-})
+    var string_to_body = content_file.slice(0, body_start + 6 );
+    var string_to_end_body = content_file.slice(body_end);
+
+
+    var html = '<table>';
+
+    // Tạo hàng tiêu đề
+    html += '<tr>\n';
+    data_csv[0].forEach(function(thuoc_tinh) {
+        html += '<td>' + thuoc_tinh + '</td>\n';
+    });
+    html += '</tr>\n';
+
+    data = data_csv.slice(1);
+
+
+
+    // Tạo các hàng dữ liệu
+    data.forEach(function (dong) {
+        html += '<tr>\n';
+        dong.forEach(function (cell){
+            html += '<td>' + cell + '</td>\n';
+        });
+        html += '</tr>\n';
+    });
+
+    html += '</table>';
+
+    return string_to_body + html + string_to_end_body;
+}

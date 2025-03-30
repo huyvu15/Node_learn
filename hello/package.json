@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "csv": "^6.3.11",
     "dayjs": "^1.11.13",
     "request": "^2.88.2"
   }
